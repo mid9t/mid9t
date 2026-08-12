@@ -18,7 +18,7 @@ I build models that know when they don't know — and evaluation harnesses that 
 
 My central research question is **can a model tell you when it's guessing?** I work on **density-aware Evidential Deep Learning** — architectures that emit a confidence/vacuity signal alongside every prediction, plus the diagnostics to prove that signal is actually load-bearing and not just noise dressed up as calibration.
 
-Day to day, I'm an **AI Evaluation Engineer (Post-Training) at [Handshake](https://joinhandshake.com)**, where I design RL environments and containerized coding tasks that stress-test frontier agents — authoring scoring gates, calibrating task difficulty, and figuring out whether a failure is the model's fault or the harness's.
+Day to day, I'm an **AI Evaluation Engineer (Post-Training) at [Handshake](https://joinhandshake.com)**, where I work on RL environments and containerized coding tasks that stress-test frontier agents — authoring scoring gates, calibrating task difficulty, and figuring out whether a failure is the model's fault or the harness's.
 
 ```
 uncertainty quantification → model evaluation → agent reliability
