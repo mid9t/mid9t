@@ -1,5 +1,6 @@
 <h1 align="center">Hi, I'm Ryu Kakuta 👋</h1>
-<h3 align="center">Model Evaluation Engineer · Uncertainty Quantification Researcher</h3>
+<h3 align="center">Model Evaluation Engineer · NLP Uncertainty Quantification Researcher</h3>
+
 
 <p align="center">
 I build models that know when they don't know — and evaluation harnesses that catch it when models fail silently instead.
