@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="140" viewBox="0 0 720 140" role="img" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>Research path: uncertainty quantification, statistical validity, AI oversight</title>
+  <line x1="120" y1="64" x2="600" y2="64" stroke="#3D444D" stroke-width="1.5"/>
+  <circle cx="120" cy="64" r="7" fill="#656D76"/>
+  <circle cx="360" cy="64" r="7" fill="#7F77DD"/>
+  <circle cx="600" cy="64" r="13" fill="none" stroke="#7F77DD" stroke-width="1.5"/>
+  <circle cx="600" cy="64" r="7" fill="#AFA9EC"/>
+  <g font-size="15" font-weight="600" fill="#F0F6FC" text-anchor="middle">
+    <text x="120" y="34">Uncertainty quantification</text>
+    <text x="360" y="34">Statistical validity</text>
+    <text x="600" y="34">AI oversight</text>
+  </g>
+  <g font-size="13" font-style="italic" fill="#9198A1" text-anchor="middle">
+    <text x="120" y="100">Is the model guessing?</text>
+    <text x="360" y="100">Is the gain real?</text>
+    <text x="600" y="100">When should it defer?</text>
+  </g>
+  <g font-size="13" fill="#9198A1" text-anchor="middle">
+    <text x="120" y="124">ER-1</text>
+    <text x="360" y="124">Skeptic</text>
+    <text x="600" y="124"><tspan fill="#AFA9EC" font-weight="600">Activation Probes</tspan> · now</text>
+  </g>
+</svg>
