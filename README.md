@@ -33,18 +33,14 @@ uncertainty quantification  →  statistical validity  →  AI oversight
 **1. [Activation Probes](https://github.com/mid9t/Activation-Monitoring): epistemic deferral for safety monitors**
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/probe-cascade-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="assets/probe-cascade-light.svg">
-    <img src="assets/probe-cascade-light.svg" width="640" alt="Two-stage cascade: prompt to Llama-3-8B residual stream to linear probe; confident cases are decided by the probe, uncertain cases defer to an LLM guard model">
-  </picture>
+  <img src="assets/probe-cascade-light.svg" width="640" alt="Activation-monitoring cascade: a prompt goes through frozen Llama-3-8B-Instruct, the residual stream feeds a linear probe, confident cases (about 95%) are decided by the probe, and the rest defer to Llama Guard 3 inside a 5% budget. Signals under test are margin (baseline), ensemble disagreement, and residual-stream density; evidential vacuity is dropped. Held-out tests are jailbreak templates, benign prompts that sound harmful, and new benign traffic.">
   <br>
-  <sub>Cheap probe first, LLM guard on deferral. Which uncertainty signal decides when to defer?</sub>
+  <sub>Probe first, Llama Guard 3 on deferral. Margin is the baseline; evidential vacuity was dropped.</sub>
 </p>
 
-A two-stage cascade for screening harmful requests: a cheap linear probe on Llama-3-8B residual-stream activations handles most traffic, and an LLM classifier takes the uncertain cases. I test whether uncertainty-based deferral signals (ensemble disagreement, class-conditional density, evidential vacuity) beat the optimal score-band baseline under held-out jailbreak and benign-traffic shifts. The protocol is pre-registered: thresholds are frozen before any held-out data is opened.
+A two-stage cascade for screening harmful requests: a linear probe on frozen Llama-3-8B-Instruct activations decides the confident cases (about 95% of traffic), and Llama Guard 3 takes the rest inside a 5% deferral budget. I test whether ensemble disagreement and residual-stream density beat the margin baseline — DeepMind’s optimal score band — on three held-out shifts: jailbreak templates, benign prompts that sound harmful, and new benign traffic. Evidential vacuity was dropped: with two classes it adds nothing beyond the probe logit. Thresholds are fit on the tune pool and frozen before any held-out data is opened.
 
-`PyTorch` · `Llama-3-8B` · `Linear Probes` · `Evidential Learning` · `Bootstrap Inference`
+`PyTorch` · `Llama-3-8B` · `Linear Probes` · `Llama Guard 3` · `Bootstrap Inference`
 
 **2. [Skeptic](https://github.com/Jamestilfords/self-refuting-swarm): do automated research loops fool themselves?**
 
@@ -66,17 +62,13 @@ A collaborative project that runs the same stream of agent-proposed model change
 ### ✅ Finished — [ER-1: Epistemic Ranker](https://github.com/mid9t/ER-1-Epistemic-Ranker-)
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/er1-oos-auroc-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="assets/er1-oos-auroc-light.svg">
-    <img src="assets/er1-oos-auroc-light.svg" width="640" alt="OOS AUROC on CLINC150 across 5 seeds: EDL vacuity 0.976, DAEDL 0.971, CE MSP 0.966, with CE+energy and CE+Mahalanobis as reference lines">
-  </picture>
+  <img src="assets/er1-oos-auroc-dark.svg" width="640" alt="CLINC150 in-scope vs out-of-scope AUROC, BERT-base, mean of 5 seeds: CE MSP 0.9655, EDL vacuity 0.9763 ± 0.0005, DAEDL (qsigmoid × mul) 0.9713 ± 0.0005. Dashed references: CE + energy 0.979 and CE + Mahalanobis 0.974.">
   <br>
-  <sub>Out-of-scope AUROC on CLINC150, BERT-base, 5 seeds. Density scaling didn't beat plain EDL vacuity.</sub>
+  <sub>Out-of-scope AUROC on CLINC150, BERT-base, 5 seeds. EDL vacuity 0.9763 beat DAEDL 0.9713. Dashed lines: CE + energy 0.979, CE + Mahalanobis 0.974.</sub>
 </p>
 
 **Question:** Does density-aware Evidential Deep Learning (DAEDL), ported from vision to BERT, improve out-of-scope detection on CLINC150?
-**Conclusion:** No, not in the headline score. Density scaling was measurably active, but plain EDL vacuity (AUROC 0.976) beat the density-scaled variant (0.971) across 5 seeds, and the gap didn't clear seed noise. Raw density alone was a strong OOS signal; it just didn't add anything to the combination rule.
+**Conclusion:** No, not in the headline score. Density scaling was measurably active, but plain EDL vacuity (AUROC 0.9763) beat the density-scaled variant (0.9713) across 5 seeds, and the gap didn't clear seed noise. Raw density alone was a strong OOS signal; it just didn't add anything to the combination rule. On the same plot, post-hoc scores of the CE model are MSP 0.9655, energy 0.979, and Mahalanobis 0.974.
 **Contribution:** A leak-free three-arm pipeline (CE / EDL / DAEDL) on shared features; a diagnostics gate that disqualifies configs where the density term is inert; identification of that "INERT" failure mode from a CIFAR replication; and NLP-specific density normalization.
 
 ---
