@@ -1,9 +1,9 @@
 <h1 align="center">Hi, I'm Ryu Kakuta 👋</h1>
-<h3 align="center">Model Evaluation Engineer · NLP Uncertainty Quantification Researcher</h3>
+<h3 align="center">Research Engineer · AI Safety · Uncertainty Quantification in NLP</h3>
 
 
 <p align="center">
-I build models that know when they don't know — and evaluation harnesses that catch it when models fail silently instead.
+I study when a model's signals can be trusted — whether it knows it's guessing, whether a measured gain is real, and whether a safety monitor knows when to hand off.
 </p>
 
 <p align="center">
@@ -17,23 +17,67 @@ I build models that know when they don't know — and evaluation harnesses that 
 
 ### 🎯 What I'm working on
 
-My central research question is **can a model tell you when it's guessing?** I work on **density-aware Evidential Deep Learning** — architectures that emit a confidence/vacuity signal alongside every prediction, plus the diagnostics to prove that signal is actually load-bearing and not just noise dressed up as calibration.
+I'm a research engineer focused on **statistical validity**, **AI safety**, and **uncertainty quantification in NLP**. My running question is **can we tell when a signal is trustworthy?** That started with uncertainty in a classifier's predictions, moved to whether experimental "wins" survive honest statistics, and now sits on **activation probes over the residual stream**: cheap monitors that read a model's internals, and the question of when they should defer to something stronger.
 
-Day to day, I'm an **AI Evaluation Engineer (Post-Training) at [Handshake](https://joinhandshake.com)**, where I work on RL environments and containerized coding tasks that stress-test frontier agents — authoring scoring gates, calibrating task difficulty, and figuring out whether a failure is the model's fault or the harness's.
+Day to day, I'm an **AI Evaluation Engineer (Post-Training) at [Handshake](https://joinhandshake.com)**, building RL environments and containerized coding tasks that stress-test frontier agents: scoring gates, difficulty calibration, and telling model failures apart from harness failures.
 
 ```
-uncertainty quantification → model evaluation → agent reliability
-        (why a model fails)   (catching it)      (trusting it anyway)
+uncertainty quantification  →  statistical validity  →  AI oversight
+ (is the model guessing?)      (is the gain real?)      (when should the monitor defer?)
 ```
 
 ---
 
-### 🔬 Current build — ER-1: Epistemic Ranker
+### 🔬 Current builds
 
-An early-exiting inference architecture gated by Evidential Deep Learning uncertainty. The model emits intermediate predictions during inference and exits early once confidence is high or vacuity is low enough — trading compute for confidence, on purpose.
+**1. [Activation Probes](https://github.com/mid9t/Activation-Monitoring): epistemic deferral for safety monitors**
 
-`PyTorch` · `Model Calibration` · `Information Retrieval` · `HuggingFace` · `Data Streaming`
-📎 [github.com/mid9t/ER-1-Epistemic-Ranker-](https://github.com/mid9t/ER-1-Epistemic-Ranker-)
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/probe-cascade-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/probe-cascade-light.svg">
+    <img src="assets/probe-cascade-light.svg" width="640" alt="Two-stage cascade: prompt to Llama-3-8B residual stream to linear probe; confident cases are decided by the probe, uncertain cases defer to an LLM guard model">
+  </picture>
+  <br>
+  <sub>Cheap probe first, LLM guard on deferral. Which uncertainty signal decides when to defer?</sub>
+</p>
+
+A two-stage cascade for screening harmful requests: a cheap linear probe on Llama-3-8B residual-stream activations handles most traffic, and an LLM classifier takes the uncertain cases. I test whether uncertainty-based deferral signals (ensemble disagreement, class-conditional density, evidential vacuity) beat the optimal score-band baseline under held-out jailbreak and benign-traffic shifts. The protocol is pre-registered: thresholds are frozen before any held-out data is opened.
+
+`PyTorch` · `Llama-3-8B` · `Linear Probes` · `Evidential Learning` · `Bootstrap Inference`
+
+**2. [Skeptic](https://github.com/Jamestilfords/self-refuting-swarm): do automated research loops fool themselves?**
+
+<p align="center">
+  <a href="https://drive.google.com/file/d/1AcFYQGjtcfUy0MQgPs4nuv7faYg9P0rR/view?usp=sharing">
+    <img src="assets/skeptic-slide.png" width="560" alt="Skeptic presentation, title slide. Click to open the full deck">
+  </a>
+  <br>
+  <sub>📊 Click to view the full slide deck</sub>
+</p>
+
+A collaborative project that runs the same stream of agent-proposed model changes through three acceptance rules (keep-if-better, Thresholdout, and a statistical critic) and measures false discoveries against recall. Proposals run in network-isolated sandboxes, test data stays sealed from agents, and every decision goes to an append-only ledger under a registered pre-analysis plan.
+📊 [Slides](https://drive.google.com/file/d/1AcFYQGjtcfUy0MQgPs4nuv7faYg9P0rR/view?usp=sharing)
+
+`Python` · `Modal Sandboxes` · `Paired Bootstrap` · `Holm Correction` · `Streamlit`
+
+---
+
+### ✅ Finished — [ER-1: Epistemic Ranker](https://github.com/mid9t/ER-1-Epistemic-Ranker-)
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/er1-oos-auroc-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/er1-oos-auroc-light.svg">
+    <img src="assets/er1-oos-auroc-light.svg" width="640" alt="OOS AUROC on CLINC150 across 5 seeds: EDL vacuity 0.976, DAEDL 0.971, CE MSP 0.966, with CE+energy and CE+Mahalanobis as reference lines">
+  </picture>
+  <br>
+  <sub>Out-of-scope AUROC on CLINC150, BERT-base, 5 seeds. Density scaling didn't beat plain EDL vacuity.</sub>
+</p>
+
+**Question:** Does density-aware Evidential Deep Learning (DAEDL), ported from vision to BERT, improve out-of-scope detection on CLINC150?
+**Conclusion:** No, not in the headline score. Density scaling was measurably active, but plain EDL vacuity (AUROC 0.976) beat the density-scaled variant (0.971) across 5 seeds, and the gap didn't clear seed noise. Raw density alone was a strong OOS signal; it just didn't add anything to the combination rule.
+**Contribution:** A leak-free three-arm pipeline (CE / EDL / DAEDL) on shared features; a diagnostics gate that disqualifies configs where the density term is inert; identification of that "INERT" failure mode from a CIFAR replication; and NLP-specific density normalization.
 
 ---
 
@@ -41,7 +85,9 @@ An early-exiting inference architecture gated by Evidential Deep Learning uncert
 
 | Project | What it does | Stack |
 |---|---|---|
-| **[ER-1: Epistemic Ranker](https://github.com/mid9t/ER-1-Epistemic-Ranker-)** | Early-exit architecture gated by evidential uncertainty | PyTorch, EDL, HuggingFace |
+| **[Activation Probes](https://github.com/mid9t/Activation-Monitoring)** | Uncertainty-gated deferral for probe-based safety monitors | PyTorch, Llama-3, Probes |
+| **[Skeptic](https://github.com/Jamestilfords/self-refuting-swarm)** | Measures false discoveries in agent-driven research loops | Python, Modal, Bootstrap |
+| **[ER-1: Epistemic Ranker](https://github.com/mid9t/ER-1-Epistemic-Ranker-)** | Audit of density-aware EDL for out-of-scope intent detection | PyTorch, EDL, HuggingFace |
 | **[GeoGenie](https://github.com/mid9t/GeoGenie)** | Free-text intent → structured spatial queries over hand-built geometric indices | Python, NumPy, FastAPI, LLMs |
 | **[RCA-Demo](https://github.com/mid9t/RCA-Demo)** | Automated root-cause analysis for sales anomalies (synthetic data) | Python, SHAP, Statistical Modeling |
 | **EEG-Based MDD Classification** | End-to-end clinical signal pipeline, built around leakage prevention and evaluation rigor | CNNs, Granger Causality |
@@ -50,8 +96,11 @@ An early-exiting inference architecture gated by Evidential Deep Learning uncert
 
 ### ✍️ Featured writing
 
+**[Does Density Help Out-of-Scope Detection? Auditing DAEDL on BERT](https://medium.com/data-science-collective/does-density-help-out-of-scope-detection-auditing-daedl-on-bert-04fcdb7ac8d4)** · *Data Science Collective*
+The write-up for ER-1: what happened when I ported density-aware EDL to language, why the density term can silently go inert, and why the honest answer turned out to be "not really."
+
 **[Evidential BERT on CLINC150: porting density-aware EDL from vision to language](https://mid9t.github.io/RyuKakuta.github.io/articles/evidential_bert_article/)**
-A theory-and-engineering deep dive adapting density-aware Evidential Deep Learning to BERT embeddings — then validating on CLINC150 that the uncertainty signal is doing real work.
+The theory-and-engineering companion piece on adapting DAEDL to BERT embeddings.
 
 ---
 
@@ -65,5 +114,5 @@ A theory-and-engineering deep dive adapting density-aware Evidential Deep Learni
 ---
 
 <p align="center">
-<sub>Open to conversations about uncertainty quantification, model evaluation, and agent reliability. My inbox is always open — <a href="mailto:kakuryu555@gmail.com">say hello</a>.</sub>
+<sub>Open to conversations about AI safety, uncertainty quantification, and statistically honest evaluation. My inbox is always open — <a href="mailto:kakuryu555@gmail.com">say hello</a>.</sub>
 </p>
