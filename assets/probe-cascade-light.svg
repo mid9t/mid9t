@@ -1,0 +1,158 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="910" viewBox="0 0 1600 910" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" role="img" aria-labelledby="title desc">
+  <title id="title">Activation-monitoring cascade: design</title>
+  <desc id="desc">Left-to-right flow: a prompt goes through frozen Llama-3-8B-Instruct; the residual stream at a middle layer feeds a linear probe; if the probe is confident it decides, otherwise the item is deferred to Llama Guard 3. Below, the four deferral signals and the three held-out tests.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4A5663"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F5FA8"/>
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#A8470F"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="910" fill="#F7F5EF"/>
+
+  <!-- Title -->
+  <text x="40" y="50" font-size="28" font-weight="700" fill="#16212B">Activation-monitoring cascade</text>
+  <text x="40" y="78" font-size="15" fill="#4A5663">Input monitoring for harmful requests on Llama-3-8B-Instruct · design as of November 16, 2026</text>
+
+  <!-- ===== Main flow ===== -->
+  <!-- Prompt -->
+  <rect x="40" y="170" width="180" height="120" rx="10" fill="#FFFEFA" stroke="#CFC8B8" stroke-width="1.5"/>
+  <text x="130" y="207" font-size="18" font-weight="700" fill="#16212B" text-anchor="middle">Prompt</text>
+  <text x="130" y="233" font-size="14" fill="#4A5663" text-anchor="middle">user turn, Llama 3</text>
+  <text x="130" y="252" font-size="14" fill="#4A5663" text-anchor="middle">chat template</text>
+  <text x="130" y="271" font-size="14" fill="#4A5663" text-anchor="middle">≤ 2,048 tokens</text>
+
+  <line x1="220" y1="230" x2="258" y2="230" stroke="#4A5663" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Llama -->
+  <rect x="260" y="170" width="200" height="120" rx="10" fill="#FFFEFA" stroke="#CFC8B8" stroke-width="1.5"/>
+  <text x="360" y="207" font-size="18" font-weight="700" fill="#16212B" text-anchor="middle">Llama-3-8B-Instruct</text>
+  <text x="360" y="233" font-size="14" fill="#4A5663" text-anchor="middle">frozen weights</text>
+  <text x="360" y="252" font-size="14" fill="#4A5663" text-anchor="middle">one forward pass,</text>
+  <text x="360" y="271" font-size="14" fill="#4A5663" text-anchor="middle">no generation</text>
+
+  <line x1="460" y1="230" x2="498" y2="230" stroke="#4A5663" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Residual stream -->
+  <rect x="500" y="170" width="210" height="120" rx="10" fill="#FFFEFA" stroke="#CFC8B8" stroke-width="1.5"/>
+  <text x="605" y="207" font-size="18" font-weight="700" fill="#16212B" text-anchor="middle">Residual stream</text>
+  <text x="605" y="233" font-size="14" fill="#4A5663" text-anchor="middle">middle layer (search 8–24,</text>
+  <text x="605" y="252" font-size="14" fill="#4A5663" text-anchor="middle">prefer 16), last prompt</text>
+  <text x="605" y="271" font-size="14" fill="#4A5663" text-anchor="middle">token, 4,096-d vector</text>
+
+  <line x1="710" y1="230" x2="758" y2="230" stroke="#4A5663" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Probe -->
+  <rect x="760" y="170" width="180" height="120" rx="10" fill="#DCE8F5" stroke="#1F5FA8" stroke-width="1.5"/>
+  <text x="850" y="207" font-size="18" font-weight="700" fill="#16212B" text-anchor="middle">Linear probe</text>
+  <text x="850" y="233" font-size="14" fill="#2E3B48" text-anchor="middle">logistic regression,</text>
+  <text x="850" y="252" font-size="14" fill="#2E3B48" text-anchor="middle">trained on train only</text>
+  <text x="850" y="271" font-size="14" fill="#2E3B48" text-anchor="middle">→ logit z</text>
+
+  <line x1="940" y1="230" x2="988" y2="230" stroke="#4A5663" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Decision diamond -->
+  <polygon points="1080,155 1175,230 1080,305 985,230" fill="#FFFEFA" stroke="#16212B" stroke-width="1.8"/>
+  <text x="1080" y="226" font-size="18" font-weight="700" fill="#16212B" text-anchor="middle">Confident?</text>
+  <text x="1080" y="248" font-size="13" fill="#4A5663" text-anchor="middle">z ≤ t0 or z ≥ t1</text>
+
+  <!-- Yes branch -->
+  <path d="M1080,155 V130 H1238" fill="none" stroke="#1F5FA8" stroke-width="2.2" marker-end="url(#arrow-blue)"/>
+  <text x="1092" y="120" font-size="15" font-weight="700" fill="#1F5FA8">yes</text>
+  <rect x="1240" y="90" width="320" height="80" rx="10" fill="#DCE8F5" stroke="#1F5FA8" stroke-width="1.5"/>
+  <text x="1400" y="124" font-size="18" font-weight="700" fill="#16212B" text-anchor="middle">The probe decides</text>
+  <text x="1400" y="150" font-size="14" fill="#2E3B48" text-anchor="middle">about 95% of traffic, near-zero cost</text>
+
+  <!-- No branch -->
+  <path d="M1080,305 V350 H1238" fill="none" stroke="#A8470F" stroke-width="2.2" marker-end="url(#arrow-orange)"/>
+  <text x="1092" y="340" font-size="15" font-weight="700" fill="#A8470F">no</text>
+  <rect x="1240" y="300" width="320" height="104" rx="10" fill="#F8E4D3" stroke="#A8470F" stroke-width="1.5"/>
+  <text x="1400" y="332" font-size="18" font-weight="700" fill="#16212B" text-anchor="middle">Defers to the LLM guard</text>
+  <text x="1400" y="357" font-size="14" fill="#3B2A1E" text-anchor="middle">Llama Guard 3 8B decides:</text>
+  <text x="1400" y="376" font-size="14" fill="#3B2A1E" text-anchor="middle">harmful if log-odds &gt; τ_llm</text>
+  <text x="1400" y="395" font-size="14" fill="#3B2A1E" text-anchor="middle">5% deferral budget (10% secondary)</text>
+
+  <!-- Connectors to the strip -->
+  <path d="M605,290 V468" fill="none" stroke="#4A5663" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+  <text x="615" y="392" font-size="13" fill="#4A5663">signals read the</text>
+  <text x="615" y="409" font-size="13" fill="#4A5663">same cached activations</text>
+
+  <path d="M720,470 V430 H1030 V268" fill="none" stroke="#4A5663" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+  <text x="735" y="451" font-size="13" fill="#4A5663">candidate rules use a signal to pick the deferred 5%</text>
+
+  <!-- ===== Strip ===== -->
+  <!-- Left panel: deferral signals -->
+  <rect x="40" y="470" width="720" height="370" rx="12" fill="#EFEBE1" stroke="#CFC8B8" stroke-width="1.2"/>
+  <text x="60" y="505" font-size="19" font-weight="700" fill="#16212B">Four deferral signals</text>
+  <text x="270" y="505" font-size="14" fill="#4A5663">which items should go to the LLM guard?</text>
+
+  <rect x="60" y="525" width="330" height="100" rx="9" fill="#FFFEFA" stroke="#1F5FA8" stroke-width="1.5"/>
+  <text x="78" y="555" font-size="16" font-weight="700" fill="#16212B">1 · Margin (baseline)</text>
+  <text x="78" y="580" font-size="14" fill="#4A5663">How close z is to the decision boundary;</text>
+  <text x="78" y="600" font-size="14" fill="#4A5663">defines DeepMind’s optimal band</text>
+
+  <rect x="410" y="525" width="330" height="100" rx="9" fill="#FFFEFA" stroke="#CFC8B8" stroke-width="1.5"/>
+  <text x="428" y="555" font-size="16" font-weight="700" fill="#16212B">2 · Ensemble disagreement</text>
+  <text x="428" y="580" font-size="14" fill="#4A5663">Spread of logits from 20 probes fit</text>
+  <text x="428" y="600" font-size="14" fill="#4A5663">on group bootstraps of train</text>
+
+  <rect x="60" y="640" width="330" height="100" rx="9" fill="#FFFEFA" stroke="#CFC8B8" stroke-width="1.5"/>
+  <text x="78" y="670" font-size="16" font-weight="700" fill="#16212B">3 · Residual-stream density</text>
+  <text x="78" y="695" font-size="14" fill="#4A5663">Min Mahalanobis distance to the three</text>
+  <text x="78" y="715" font-size="14" fill="#4A5663">train cells; 4,096-d, tied covariance</text>
+
+  <rect x="410" y="640" width="330" height="100" rx="9" fill="#F3F1EC" stroke="#8C939B" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="428" y="670" font-size="16" font-weight="700" fill="#5B6773">4 · Evidential vacuity: dropped</text>
+  <text x="428" y="695" font-size="14" fill="#5B6773">Amendment 1: with two classes it adds</text>
+  <text x="428" y="715" font-size="14" fill="#5B6773">nothing beyond the probe logit</text>
+
+  <text x="60" y="773" font-size="14" fill="#2E3B48"><tspan font-weight="700">Controls:</tspan> token count and activation norm. A signal must beat token count to stay.</text>
+  <text x="60" y="797" font-size="14" fill="#2E3B48"><tspan font-weight="700">Carried to the Freeze:</tspan> a swap rule on the best signal, and a margin + signal rule.</text>
+  <text x="60" y="821" font-size="14" fill="#2E3B48"><tspan font-weight="700">Gate 2</tspan> picks signals on the tune pool only; held-out data stays locked.</text>
+
+  <!-- Right panel: held-out tests -->
+  <rect x="800" y="470" width="760" height="370" rx="12" fill="#EFEBE1" stroke="#CFC8B8" stroke-width="1.2"/>
+  <text x="820" y="505" font-size="19" font-weight="700" fill="#16212B">Three held-out tests</text>
+  <text x="1015" y="505" font-size="14" fill="#4A5663">distribution shifts the probe never trained on</text>
+
+  <rect x="820" y="525" width="230" height="215" rx="9" fill="#FFFEFA" stroke="#CFC8B8" stroke-width="1.5"/>
+  <text x="838" y="555" font-size="16" font-weight="700" fill="#16212B">A · Jailbreak</text>
+  <text x="838" y="575" font-size="16" font-weight="700" fill="#16212B">templates</text>
+  <text x="838" y="602" font-size="14" font-weight="600" fill="#A8470F">harmful · weight 5</text>
+  <text x="838" y="628" font-size="14" fill="#4A5663">100 in-the-wild templates</text>
+  <text x="838" y="648" font-size="14" fill="#4A5663">× 200 StrongREJECT</text>
+  <text x="838" y="668" font-size="14" fill="#4A5663">requests, plus Bailey</text>
+  <text x="838" y="688" font-size="14" fill="#4A5663">et al.’s released</text>
+  <text x="838" y="708" font-size="14" fill="#4A5663">jailbreaks</text>
+
+  <rect x="1065" y="525" width="230" height="215" rx="9" fill="#FFFEFA" stroke="#CFC8B8" stroke-width="1.5"/>
+  <text x="1083" y="555" font-size="16" font-weight="700" fill="#16212B">B · Benign prompts</text>
+  <text x="1083" y="575" font-size="16" font-weight="700" fill="#16212B">that sound harmful</text>
+  <text x="1083" y="602" font-size="14" font-weight="600" fill="#1F5FA8">benign · weight 2</text>
+  <text x="1083" y="628" font-size="14" fill="#4A5663">OR-Bench (20,000)</text>
+  <text x="1083" y="648" font-size="14" fill="#4A5663">+ XSTest safe prompts</text>
+  <text x="1083" y="668" font-size="14" fill="#4A5663">(250)</text>
+  <text x="1083" y="700" font-size="13" font-style="italic" fill="#4A5663">near shift</text>
+
+  <rect x="1310" y="525" width="230" height="215" rx="9" fill="#FFFEFA" stroke="#CFC8B8" stroke-width="1.5"/>
+  <text x="1328" y="555" font-size="16" font-weight="700" fill="#16212B">C · New benign</text>
+  <text x="1328" y="575" font-size="16" font-weight="700" fill="#16212B">traffic</text>
+  <text x="1328" y="602" font-size="14" font-weight="600" fill="#1F5FA8">benign · weight 50</text>
+  <text x="1328" y="628" font-size="14" fill="#4A5663">WildChat first turns:</text>
+  <text x="1328" y="648" font-size="14" fill="#4A5663">10,000 non-English</text>
+  <text x="1328" y="668" font-size="14" fill="#4A5663">+ 10,000 code</text>
+  <text x="1328" y="700" font-size="13" font-style="italic" fill="#4A5663">far shift (new domains)</text>
+
+  <text x="820" y="773" font-size="14" fill="#2E3B48">Thresholds are fit on the tune pool and frozen; held-out sets see only z</text>
+  <text x="820" y="797" font-size="14" fill="#2E3B48">and the guard’s log-odds until the Freeze. Weights are DeepMind’s error costs.</text>
+  <text x="820" y="821" font-size="14" fill="#2E3B48"><tspan font-weight="700">Pre-registered:</tspan> if density helps, it helps most on C and least on B.</text>
+
+  <!-- Footer -->
+  <text x="40" y="878" font-size="13" fill="#5B6773">Metric: weighted error E = 5·FNR + 2·FPR(hard negatives) + 50·FPR(ordinary traffic), compared at a matched 5% deferral budget against DeepMind’s optimal band.</text>
+  <text x="40" y="897" font-size="13" fill="#5B6773">Sources: five-week plan with Amendment 1 (Nov 6, 2026); Gate 1 design document (Nov 11, 2026); Kramár et al., Building Production-Ready Probes For Gemini.</text>
+</svg>
